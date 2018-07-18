@@ -41,9 +41,15 @@ const Lasso = L.Handler.extend({
     addHooks() {
         this.map.on('mousedown', this.onMouseDown, this);
         this.map.on('mouseup', this.onMouseUp, this);
-        document.addEventListener('mouseup', this.onMouseUpBound);
+        document.addEventListener('mouseup', this.onMouseUpBound, true);
         
-        this.map.getContainer().style.cursor = this.options.cursor || '';
+        const mapContainer = this.map.getContainer();
+        mapContainer.style.cursor = this.options.cursor || '';
+        mapContainer.style.userSelect = 'none';
+        mapContainer.style.msUserSelect = 'none';
+        (mapContainer.style as any).mozUserSelect = 'none'; // missing typings
+        mapContainer.style.webkitUserSelect = 'none';
+
         this.map.dragging.disable();
         this.map.fire('lasso.enabled');
     },
@@ -54,14 +60,20 @@ const Lasso = L.Handler.extend({
         this.map.off('mouseup', this.onMouseUp, this);
         document.removeEventListener('mouseup', this.onMouseUpBound);
 
-        this.map.getContainer().style.cursor = '';
+        const mapContainer = this.map.getContainer();
+        mapContainer.style.cursor = '';
+        mapContainer.style.userSelect = '';
+        mapContainer.style.msUserSelect = '';
+        (mapContainer.style as any).mozUserSelect = ''; // missing typings
+        mapContainer.style.webkitUserSelect = '';
+
         this.map.dragging.enable();
         this.map.fire('lasso.disabled');
     },
 
     onMouseDown(event: LeafletEvent) {
         if (this.polygon) { // lost one mouseup event eg because another map control "stole" it, thus ignore this and continue
-            return;
+            this.map.removeLayer(this.polygon);
         }    	
         const event2 = event as LeafletMouseEvent;
         this.polygon = L.polygon([event2.latlng], this.options.polygon).addTo(this.map);

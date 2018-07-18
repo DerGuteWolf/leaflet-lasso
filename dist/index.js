@@ -20,8 +20,13 @@ var Lasso = L.Handler.extend({
     addHooks: function () {
         this.map.on('mousedown', this.onMouseDown, this);
         this.map.on('mouseup', this.onMouseUp, this);
-        document.addEventListener('mouseup', this.onMouseUpBound);
-        this.map.getContainer().style.cursor = this.options.cursor || '';
+        document.addEventListener('mouseup', this.onMouseUpBound, true);
+        var mapContainer = this.map.getContainer();
+        mapContainer.style.cursor = this.options.cursor || '';
+        mapContainer.style.userSelect = 'none';
+        mapContainer.style.msUserSelect = 'none';
+        mapContainer.style.mozUserSelect = 'none';
+        mapContainer.style.webkitUserSelect = 'none';
         this.map.dragging.disable();
         this.map.fire('lasso.enabled');
     },
@@ -30,13 +35,18 @@ var Lasso = L.Handler.extend({
         this.map.off('mousemove', this.onMouseMove, this);
         this.map.off('mouseup', this.onMouseUp, this);
         document.removeEventListener('mouseup', this.onMouseUpBound);
-        this.map.getContainer().style.cursor = '';
+        var mapContainer = this.map.getContainer();
+        mapContainer.style.cursor = '';
+        mapContainer.style.userSelect = '';
+        mapContainer.style.msUserSelect = '';
+        mapContainer.style.mozUserSelect = '';
+        mapContainer.style.webkitUserSelect = '';
         this.map.dragging.enable();
         this.map.fire('lasso.disabled');
     },
     onMouseDown: function (event) {
         if (this.polygon) {
-            return;
+            this.map.removeLayer(this.polygon);
         }
         var event2 = event;
         this.polygon = L.polygon([event2.latlng], this.options.polygon).addTo(this.map);
